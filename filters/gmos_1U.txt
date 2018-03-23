@@ -6,7 +6,7 @@
 # Created: 26 February 2003
 #
 # Effective wavelength for calculation of image quality
-350.
+#350.
 #
 #  Table andoverfilters.tab  Wed 16:45:02 26-Feb-2003
 # lambda u_G0308

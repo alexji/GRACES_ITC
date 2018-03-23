@@ -10,7 +10,7 @@
 # Created: 14 Feb 2001
 #
 # Effective wavelength
-630.4
+#630.4
 #
 # Table gmosr_n.tab  Wed 09:57:20 14-Feb-2001
 # lambda  filtr

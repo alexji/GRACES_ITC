@@ -10,7 +10,7 @@
 # Created: 14 Feb 2001
 #
 # Effective wavelength
-475.
+#475.
 #
 # Table gmosg_n.tab  Wed 09:57:18 14-Feb-2001
 # lambda  filtg
