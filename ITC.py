@@ -89,7 +89,7 @@ def apply_filtermag_to_template(ltmpl, itmpl, filter, mag):
 IQ_to_seeing = {20: 0.6, 70: 0.85, 85: 1.10, 100: 1.90}
 def compute_seeing_loss(seeing, return_fltot=False):
     a = np.arange(400)/50.
-    psfg = np.exp(-(a-4.)**2 / (seeing/(4*np.log10(2))**2))
+    psfg = np.exp(-(a-4.)**2 / (seeing/(4*np.log(2))**2))
     fiber = 1.20
     fltot = np.sum(psfg)
     frac = np.sum(psfg[np.logical_and(a >= 4-fiber/2., a <= 4+fiber/2.)])/fltot
@@ -249,4 +249,6 @@ if __name__=="__main__":
     wl, SNR = run_itc(template, "G", 14.0, sky_background, image_quality, cloud_cover, airmass, exposure_time, 
                       read_mode=read_mode, spectral_mode=spectral_mode, AV = AV)
     plt.plot(wl, SNR)
+    data = np.loadtxt("ITC_GRACES_BLACKBODY_1200.00s.dat")
+    plt.plot(data[:,0], data[:,1])
     plt.show()
