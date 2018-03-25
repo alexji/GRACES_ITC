@@ -6,6 +6,8 @@ import time
 from scipy.interpolate import interp1d
 
 all_filters = ["U","G","R","I"]
+mypath = os.path.dirname(os.path.realpath(__file__))
+VERBOSE = False
 
 lmin, lmax, dl = 3000, 10500, .01
 
@@ -15,8 +17,9 @@ def spline(xp, yp, xn):
     return f(xn)
 
 def log_time(label,start):
-    print "{} ({:.1f}s)".format(label, time.time()-start)
-    sys.stdout.flush()
+    if VERBOSE:
+        print "{} ({:.1f}s)".format(label, time.time()-start)
+        sys.stdout.flush()
 
 def load_template(args, wlmin=3500, wlmax=12500):
     try:
@@ -38,11 +41,11 @@ def load_template(args, wlmin=3500, wlmax=12500):
         expn = float(args[1])
         itmpl=ltmpl**expn
     else:
-        with open("./templates/lt","r") as fp:
+        with open(mypath+"/templates/lt","r") as fp:
             all_templates = fp.readlines()
         all_templates = map(lambda x: x.strip(), all_templates)
         assert template_type in all_templates, (template_type, all_templates)
-        fname = "./templates/{}".format(template_type)
+        fname = mypath+"/templates/{}".format(template_type)
         ltmpl, itmpl = np.loadtxt(fname, unpack=True)
     
     ## NOT IMPLEMENTED: REDSHIFTING THE TEMPLATE (line 545 in ITC.pro)
@@ -52,7 +55,7 @@ def load_template(args, wlmin=3500, wlmax=12500):
 
 def load_filter(filter):
     assert filter in all_filters, (filter, all_filters)
-    filter_fnames = ["./filters/gmos_{}{}.txt".format(x+1,y) for x,y in enumerate(all_filters)]
+    filter_fnames = [mypath+"/filters/gmos_{}{}.txt".format(x+1,y) for x,y in enumerate(all_filters)]
     fname = filter_fnames[all_filters.index(filter)]
     lfl, ifl = np.loadtxt(fname, unpack=True, skiprows=2, comments="#")
     lfl *= 10.
@@ -102,7 +105,7 @@ CC_to_extinc = {50: 0.0, 70: 0.3, 80: 1.0, 100: 3.0}
 def compute_airmass_loss(airmass, ltmpl):
     extl=np.array([310 ,320 ,340 ,360 ,380 ,400 ,450 ,500 ,550 ,600 ,650 ,700 ,800 ,900 ,1100,1200,1250])*10
     extv=np.array([1.37,0.82,0.51,0.37,0.30,0.25,0.17,0.13,0.12,0.11,0.11,0.10,0.07,0.05,0.02,0.017,0.015])
-    print np.min(ltmpl), np.max(ltmpl), 
+    #print np.min(ltmpl), np.max(ltmpl), 
     ext = spline(extl,extv,ltmpl)
     return 1./(10.**((-0.4*ext)*(1-airmass)))
 
@@ -134,8 +137,8 @@ def load_base_sky(sky_brightness, xint):
 
 def run_itc(template, filter, mag, sky_background, image_quality, cloud_cover, airmass, exptime, 
             wlmin=3500, wlmax=12500, read_mode="slow", spectral_mode=2, AV = 0., full_output=False):
-    assert os.path.exists("./templates/")
-    assert os.path.exists("./filters/")
+    assert os.path.exists(mypath+"/templates/")
+    assert os.path.exists(mypath+"/filters/")
 
     assert filter in all_filters
     assert sky_background in [20,50,80,100]
@@ -231,8 +234,8 @@ def run_itc(template, filter, mag, sky_background, image_quality, cloud_cover, a
 
 
 if __name__=="__main__":
-    assert os.path.exists("./templates/")
-    assert os.path.exists("./filters/")
+    assert os.path.exists(mypath+"/templates/")
+    assert os.path.exists(mypath+"/filters/")
     
     import matplotlib.pyplot as plt
     
