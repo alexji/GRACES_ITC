@@ -233,6 +233,45 @@ def run_itc(template, filter, mag, sky_background, image_quality, cloud_cover, a
     return xint, SNR
 
 
+def exptimecalc(template, wlrange, SNR, filter, mag, sky_background, image_quality, cloud_cover, airmass,
+                wlmin=3500, wlmax=12500, read_mode="slow", spectral_mode=2, AV = 0.):
+    """
+    Calculate exposure time to achieve a given SNR at the given wavelength range.
+    """
+    wl1, wl2 = wlrange
+    if wl2 < wl1: _ = wl2; wl2 = wl1; wl1 = _
+    
+    exptime = 1.
+    wl, snrspec, signalspec, noisespec, skyspec = run_itc(template, filter, mag, sky_background, 
+                                                          image_quality, cloud_cover, airmass, exptime, 
+                                                          wlmin=wlmin, wlmax=wlmax, read_mode=read_mode,
+                                                          spectral_mode=spectral_mode, AV = AV, full_output=True)
+    if spectral_mode == 1: apert = 22.
+    elif spectral_mode == 2: apert = 12.
+    if read_mode=="slow": rdnoise = 2.9
+    elif read_mode=="fast": rdnoise = 4.2
+    
+    # SNR = signal / sqrt( signal + noise^2 + Nst )
+    # tsky = exptime * sky
+    # tsignal = exptime * signal
+    # tnoise = sqrt(exptime) * noise if readnoise is negligible TODO recalculate this with non-negligible readnoise
+    # noise^2 = apert * (Nst + rdnoise**2) = exptime * [apert * (Nst1 + rdnoise**2/exptime)]
+    # tSNR = SNR * sqrt(exptime)
+
+    # Solve for exptime with quadratic formula
+    Aquad = signalspec**2
+    Bquad = (-SNR**2) * (signalspec + skyspec * (1 + apert))
+    Cquad = (-SNR**2) * rdnoise**2 * apert
+    
+    exptimearr = np.array((-Bquad + np.sqrt(Bquad**2 - 4 * Aquad * Cquad))/(2*Aquad))
+
+    ii = np.logical_and(wl1 < wl, wl2 > wl)
+    #snr = np.median(snrspec[ii])
+    #sqrtexptime = np.sqrt(exptime) * SNR/snr
+    #return round(sqrtexptime**2,0)
+    exptime = np.nanmedian(exptimearr[ii])
+    return exptime
+
 if __name__=="__main__":
     assert os.path.exists(mypath+"/templates/")
     assert os.path.exists(mypath+"/filters/")
@@ -240,7 +279,7 @@ if __name__=="__main__":
     import matplotlib.pyplot as plt
     
     template = ["blackbody", 4800]
-    sky_background = 20
+    sky_background = 50
     image_quality = 20
     cloud_cover = 50
     airmass = 1.0
@@ -249,9 +288,14 @@ if __name__=="__main__":
     spectral_mode = 2
     AV = 0.
 
-    wl, SNR = run_itc(template, "G", 14.0, sky_background, image_quality, cloud_cover, airmass, exposure_time, 
+    #wl, SNR = run_itc(template, "G", 14.0, sky_background, image_quality, cloud_cover, airmass, exposure_time, 
+    #                  read_mode=read_mode, spectral_mode=spectral_mode, AV = AV)
+    #plt.plot(wl, SNR)
+    #data = np.loadtxt("ITC_GRACES_BLACKBODY_1200.00s.dat")
+    #plt.plot(data[:,0], data[:,1])
+    #plt.show()
+
+    wlrange = [5100, 5300]
+    SNR = 100.
+    print exptimecalc(template, wlrange, SNR, "G", 14.0, sky_background, image_quality, cloud_cover, airmass,
                       read_mode=read_mode, spectral_mode=spectral_mode, AV = AV)
-    plt.plot(wl, SNR)
-    data = np.loadtxt("ITC_GRACES_BLACKBODY_1200.00s.dat")
-    plt.plot(data[:,0], data[:,1])
-    plt.show()
